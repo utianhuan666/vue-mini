@@ -1,3 +1,8 @@
+export let activeSub
+
 export function effect(fn: Function) { 
-    fn()
+    activeSub = fn
+    activeSub()
+    
+    activeSub = undefined
 }
