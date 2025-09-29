@@ -1,4 +1,5 @@
 import { activeSub } from './effect'
+import { Link, link, propagate } from './system'
 
 enum ReactiveFlags {
   IS_REF = '__v_isRef',
@@ -14,8 +15,15 @@ class RefImpl {
   //标识是ref类型
   [ReactiveFlags.IS_REF] = true
 
-  //保存和effect之间的关联关系
-  subs
+  /**
+   * 订阅者链表的头节点,理解为head
+   */
+  subs: Link
+
+  /**
+   * 订阅者链表的尾节点,理解为tail
+   */
+  subsTail: Link
 
   constructor(value) {
     this._value = value
@@ -23,8 +31,7 @@ class RefImpl {
 
   get value() {
     if (activeSub) {
-      //如果activeSub存在，说明当前有函数在执行，等待更新的时候触发
-      this.subs = activeSub
+      trackRef(this)
     }
     //收集依赖
     return this._value
@@ -33,8 +40,7 @@ class RefImpl {
   set value(newValue) {
     //触发更新
     this._value = newValue
-    //通知effect重新执行,获取到最新的值
-    this.subs?.()
+    triggerRef(this)
   }
 }
 
@@ -44,4 +50,24 @@ export function ref(value) {
 
 export function isRef(value) {
   return !!(value && value[ReactiveFlags.IS_REF])
+}
+
+/**
+ * 收集依赖,建立ref和effect的关联联系
+ * @param dep Ref实例
+ */
+export function trackRef(dep) {
+  if (activeSub) {
+    link(dep, activeSub)
+  }
+}
+
+/**
+ * 触发ref关联的effect重新执行
+ * @param dep Ref实例
+ */
+export function triggerRef(dep) {
+  if (dep.subs) {
+    propagate(dep.subs)
+  }
 }
