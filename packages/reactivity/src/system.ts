@@ -1,3 +1,5 @@
+import { ReactiveEffect } from "vue"
+
 /**
  * 链表节点
  */
@@ -5,7 +7,7 @@ export interface Link {
   /**
    * 保存effect
    */
-  sub: Function
+  sub: ReactiveEffect
   //下一个节点
   nextSub: Link | undefined
   //上一个节点
@@ -54,5 +56,5 @@ export function propagate(subs) {
     link = link.nextSub
   }
 
-  queuedEffect.forEach(effect => effect())
+  queuedEffect.forEach(effect => effect.run())
 }
