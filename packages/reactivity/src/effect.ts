@@ -16,11 +16,37 @@ class ReactiveEffect {
       activeSub = prevSub
     }
   }
+
+  /**
+   * 通知更新的方法,如果依赖的数据发生了变化,会调用这个函数
+   */
+  notify() {
+    this.scheduler()
+  }
+  /**
+   * 默认调用run(),如果用户传了,那已用户的为主,实例属性的优先级优于原型属性
+   */
+  scheduler() {
+    this.run()
+  }
 }
 
-export function effect(fn: Function,options) {
+export function effect(fn: Function, options) {
   const e = new ReactiveEffect(fn)
   //scheduler
-  Object.assign(e,options)
+  Object.assign(e, options)
+
   e.run()
+
+  /**
+   * 绑定函数的this
+   */
+  const runner = e.run.bind(e)
+
+  /**
+   * 把effect的实例放到函数属性中
+   */
+  runner.effect = e
+
+  return runner
 }

@@ -8,20 +8,25 @@
   </head>
   <body>
     <script type="module">
-      import {
-        ref,
-        effect,
-      } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
-      // import { ref, effect } from '../dist/reactivity.esm.js'
+      // import {
+      //   ref,
+      //   effect,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
+      import { ref, effect } from '../dist/reactivity.esm.js'
       const count = ref(0)
 
-      effect(() => {
-        console.log('effect count.value ====> ', count.value)
-      },{
-        scheduler(){
-          console.log('触发了调度器');
-        }
-      })
+      const e = effect(
+        () => {
+          console.log('effect count.value ====> ', count.value)
+        },
+        {
+          scheduler() {
+            console.log('触发了调度器')
+          },
+        },
+      )
+
+      console.dir(e)
 
       setTimeout(() => {
         count.value = 1
