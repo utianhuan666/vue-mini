@@ -1,6 +1,17 @@
+import { Link } from './system'
+
 export let activeSub
 
 class ReactiveEffect {
+  /**
+   * 依赖项链表的头节点
+   */
+  deps: Link | undefined
+  /**
+   * 依赖项链表的尾节点
+   */
+  depsTail: Link | undefined
+
   constructor(public fn: Function) {}
 
   run() {
@@ -8,6 +19,8 @@ class ReactiveEffect {
     const prevSub = activeSub
     //每次执行fn之前,把this放到activeSub上
     activeSub = this
+
+    this.depsTail = undefined
 
     try {
       return this.fn()
