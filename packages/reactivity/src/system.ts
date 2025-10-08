@@ -66,7 +66,6 @@ export function link(dep, sub) {
    * 看一下linkPool有没有,如果有就复用
    */
   if (linkPool) {
-    console.log('复用了linkPool的节点')
     newLink = linkPool
     linkPool = linkPool.nextDep
     newLink.nextDep = nextDep
@@ -200,8 +199,6 @@ export function clearTracking(link: Link) {
      */
     link.nextDep = linkPool
     linkPool = link
-
-    console.log('不要了,你保存起来吧')
 
     link = nextDep
   }
