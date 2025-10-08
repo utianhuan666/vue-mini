@@ -1,4 +1,4 @@
-import { Link } from './system'
+import { endTrack, Link, startTrack } from './system'
 
 export let activeSub
 
@@ -20,11 +20,12 @@ class ReactiveEffect {
     //每次执行fn之前,把this放到activeSub上
     activeSub = this
 
-    this.depsTail = undefined
+    startTrack(this)
 
     try {
       return this.fn()
     } finally {
+      endTrack(this)
       //执行完成后,把activeSub置为undefined
       activeSub = prevSub
     }

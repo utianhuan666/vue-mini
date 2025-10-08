@@ -61,7 +61,7 @@ export function link(dep, sub) {
   const newLink = {
     sub,
     dep,
-    nextDep: undefined,
+    nextDep,
     nextSub: undefined,
     prevSub: undefined,
   }
@@ -113,4 +113,73 @@ export function propagate(subs) {
   }
 
   queuedEffect.forEach(effect => effect.notify())
+}
+
+/**
+ * 开始追踪依赖，将depsTail尾节点设置成undefind
+ * @param sub
+ */
+export function startTrack(sub) {
+  this.depsTail = undefined
+}
+
+/**
+ * 结束追踪，找到需要清理的依赖，断开关联关系
+ * @param sub
+ */
+export function endTrack(sub) {
+  const depsTail = sub.depsTail
+  /**
+   * depsTail有,并且depsTail还有nextDep,我们应该把他们的依赖关系清理掉
+   * depsTail没有,并且头节点有,那么就把所有都清理掉
+   */
+  if (depsTail) {
+    if (depsTail.nextDep) {
+      clearTracking(depsTail.nextDep)
+      depsTail.nextDep = undefined
+    }
+  } else if (sub.deps) {
+    clearTracking(sub.deps)
+    sub.deps = undefined
+  }
+}
+
+/**
+ * 清理依赖关系
+ * @param fn
+ * @param options
+ * @returns
+ */
+export function clearTracking(link: Link) {
+  while (link) {
+    const { prevSub, nextSub, nextDep, dep } = link
+
+    /**
+     * 如果prevSub有,那就把prevSub的下一个节点,指向当前节点的下一个
+     * 如果没有,那就是头节点，那就把当前dep的头节点指向下一个节点
+     */
+    if (prevSub) {
+      prevSub.nextSub = nextSub
+      link.nextSub = undefined
+    } else {
+      dep.subs = nextSub
+    }
+
+    /**
+     * 如果下一个有，那就把nextSub的上一个节点，指向节点的上一个节点
+     * 如果没有,那就是尾节点,那就把当前dep的尾节点`指向上一个节点
+     */
+    if (nextSub) {
+      nextSub.prevSub = prevSub
+      link.prevSub = undefined
+    } else {
+      dep.subsTail = prevSub
+    }
+
+    link.dep = link.sub = undefined
+
+    link.nextDep = undefined
+
+    link = nextDep
+  }
 }
