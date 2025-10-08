@@ -26,12 +26,7 @@
       const name = ref('远方OS')
       const age = ref(18)
 
-      let count = 0
-      
-      const e = effect(() => {
-        console.count('effect')
-        if (count > 0) return
-        count++
+      effect(() => {
         if (flag.value) {
           app.innerHTML = name.value
         } else {

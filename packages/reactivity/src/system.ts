@@ -36,6 +36,8 @@ export interface Link {
   nextDep: Link | undefined
 }
 
+//保存已经被清理掉的节点，留着复用
+let linkPool: Link
 /**
  * 链接链表关系
  * @param dep Ref实例
@@ -58,12 +60,27 @@ export function link(dep, sub) {
   // #endregion
 
   //如果activeSub存在，说明当前有函数在执行，等待更新的时候触发
-  const newLink = {
-    sub,
-    dep,
-    nextDep,
-    nextSub: undefined,
-    prevSub: undefined,
+  let newLink
+
+  /**
+   * 看一下linkPool有没有,如果有就复用
+   */
+  if (linkPool) {
+    console.log('复用了linkPool的节点')
+    newLink = linkPool
+    linkPool = linkPool.nextDep
+    newLink.nextDep = nextDep
+    newLink.sub = sub
+    newLink.dep = dep
+  } else {
+    //如果没有就创建新的
+    newLink = {
+      sub,
+      dep,
+      nextDep,
+      nextSub: undefined,
+      prevSub: undefined,
+    }
   }
 
   // #region 将链表节点和dep建立关联关系
@@ -120,7 +137,7 @@ export function propagate(subs) {
  * @param sub
  */
 export function startTrack(sub) {
-  this.depsTail = undefined
+  sub.depsTail = undefined
 }
 
 /**
@@ -178,7 +195,13 @@ export function clearTracking(link: Link) {
 
     link.dep = link.sub = undefined
 
-    link.nextDep = undefined
+    /**
+     * 把不要的节点给linkPool,留着复用
+     */
+    link.nextDep = linkPool
+    linkPool = link
+
+    console.log('不要了,你保存起来吧')
 
     link = nextDep
   }
