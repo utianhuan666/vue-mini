@@ -1,5 +1,7 @@
+import { hasChanged, isObject } from '@vue/shared'
 import { activeSub } from './effect'
 import { Link, link, propagate } from './system'
+import { reactive } from './reactive'
 
 enum ReactiveFlags {
   IS_REF = '__v_isRef',
@@ -26,7 +28,10 @@ class RefImpl {
   subsTail: Link
 
   constructor(value) {
-    this._value = value
+    /**
+     * 如果value是一个对象，那么使用reactive给它搞成响应式对象
+     */
+    this._value = isObject(value) ? reactive(value) : value
   }
 
   get value() {
@@ -38,9 +43,12 @@ class RefImpl {
   }
 
   set value(newValue) {
-    //触发更新
-    this._value = newValue
-    triggerRef(this)
+    if (hasChanged(newValue, this._value)) {
+      //只有在值发生变化之后才触发更新
+      //触发更新
+      this._value = isObject(newValue) ? reactive(newValue) : newValue
+      triggerRef(this)
+    }
   }
 }
 
